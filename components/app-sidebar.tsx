@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +18,14 @@ import {
 } from "@/components/ui/sidebar"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ProgressCircle } from "@/components/progress-circle"
 import {
   MagnifyingGlass,
@@ -31,6 +39,8 @@ import {
   Question,
   CaretRight,
   CaretUpDown,
+  SignOut,
+  UserCircle,
 } from "@phosphor-icons/react/dist/ssr"
 import { activeProjects, footerItems, navItems, type NavItemId, type SidebarFooterItemId } from "@/lib/data/sidebar"
 import { SettingsDialog } from "@/components/settings/SettingsDialog"
@@ -51,6 +61,7 @@ const footerItemIcons: Record<SidebarFooterItemId, React.ComponentType<{ classNa
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const getHrefForNavItem = (id: NavItemId): string => {
@@ -188,17 +199,45 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
 
-        <div className="mt-2 flex items-center gap-3 rounded-lg p-2 hover:bg-accent cursor-pointer">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="/avatar-profile.jpg" />
-            <AvatarFallback>JD</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-1 flex-col">
-            <span className="text-sm font-medium">Jason D</span>
-            <span className="text-xs text-muted-foreground">jason.duong@mail.com</span>
-          </div>
-          <CaretRight className="h-4 w-4 text-muted-foreground" />
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="mt-2 flex w-full items-center gap-3 rounded-lg p-2 hover:bg-accent cursor-pointer outline-none">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src="/avatar-profile.jpg" />
+                <AvatarFallback>JD</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-1 flex-col text-left">
+                <span className="text-sm font-medium">Jason D</span>
+                <span className="text-xs text-muted-foreground">jason.duong@mail.com</span>
+              </div>
+              <CaretRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="end" className="w-56">
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-medium">Jason D</p>
+                <p className="text-xs text-muted-foreground">jason.duong@mail.com</p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setIsSettingsOpen(true)}
+              className="gap-2 cursor-pointer"
+            >
+              <UserCircle className="h-4 w-4" />
+              Account
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => router.push("/login")}
+              className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+            >
+              <SignOut className="h-4 w-4" />
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
 
       <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
