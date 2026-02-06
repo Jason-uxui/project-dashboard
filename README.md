@@ -102,24 +102,24 @@ This separation keeps:
 
 ### Install dependencies
 
-\`\`\`bash
+```bash
 pnpm install
-\`\`\`
+```
 
 ### Run the development server
 
-\`\`\`bash
+```bash
 pnpm dev
-\`\`\`
+```
 
 The app will be available at `http://localhost:3000`.
 
 ### Build for production
 
-\`\`\`bash
+```bash
 pnpm build
 pnpm start
-\`\`\`
+```
 
 ## Reuse & Customization
 
