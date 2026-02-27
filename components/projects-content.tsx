@@ -2,19 +2,33 @@
 
 import { useEffect, useState, useRef, useMemo } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 import { ProjectHeader } from "@/components/project-header"
 import { ProjectTimeline } from "@/components/project-timeline"
 import { ProjectCardsView } from "@/components/project-cards-view"
 import { ProjectBoardView } from "@/components/project-board-view"
 import { ProjectWizard } from "@/components/project-wizard/ProjectWizard"
-import { computeFilterCounts, projects } from "@/lib/data/projects"
+import { computeFilterCounts, type Project } from "@/lib/data/projects"
 import { DEFAULT_VIEW_OPTIONS, type FilterChip, type ViewOptions } from "@/lib/view-options"
 import { chipsToParams, paramsToChips } from "@/lib/url/filters"
+import { useProjectsCrud, type CreateProjectInput } from "@/hooks/use-projects-crud"
+import { Button } from "@/components/ui/button"
 
 export function ProjectsContent() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const {
+    projects,
+    isLoading,
+    isMutating,
+    error,
+    refetch,
+    createProject,
+    updateProject,
+    deleteProject,
+    updateTask,
+  } = useProjectsCrud()
 
   const [viewOptions, setViewOptions] = useState<ViewOptions>(DEFAULT_VIEW_OPTIONS)
 
@@ -33,8 +47,10 @@ export function ProjectsContent() {
     setIsWizardOpen(false)
   }
 
-  const handleProjectCreated = () => {
+  const handleProjectCreated = async (input: CreateProjectInput) => {
+    await createProject(input)
     setIsWizardOpen(false)
+    toast.success("Project created successfully")
   }
 
   const removeFilter = (key: string, value: string) => {
@@ -113,6 +129,76 @@ export function ProjectsContent() {
     return sorted
   }, [filters, viewOptions, projects])
 
+  const handleProjectStatusChange = async (projectId: string, status: Project["status"]) => {
+    try {
+      await updateProject(projectId, { status })
+    } catch (nextError) {
+      toast.error(nextError instanceof Error ? nextError.message : "Failed to update project status.")
+      await refetch()
+    }
+  }
+
+  const handleTaskStatusChange = async (
+    _projectId: string,
+    taskId: string,
+    status: Project["tasks"][number]["status"]
+  ) => {
+    try {
+      await updateTask(taskId, { status })
+    } catch (nextError) {
+      toast.error(nextError instanceof Error ? nextError.message : "Failed to update task status.")
+      await refetch()
+    }
+  }
+
+  const handleTaskDatesChange = async (
+    _projectId: string,
+    taskId: string,
+    startDate: Date,
+    endDate: Date
+  ) => {
+    try {
+      await updateTask(taskId, { startDate, endDate })
+    } catch (nextError) {
+      toast.error(nextError instanceof Error ? nextError.message : "Failed to update task dates.")
+      await refetch()
+    }
+  }
+
+  const handleProjectDatesChange = async (projectId: string, startDate: Date, endDate: Date) => {
+    try {
+      await updateProject(projectId, { startDate, endDate })
+    } catch (nextError) {
+      toast.error(nextError instanceof Error ? nextError.message : "Failed to update project dates.")
+      await refetch()
+    }
+  }
+
+  const handleRenameProject = async (projectId: string, currentName: string) => {
+    const nextName = window.prompt("Rename project", currentName)
+    const normalizedName = nextName?.trim()
+    if (!normalizedName || normalizedName === currentName) return
+
+    try {
+      await updateProject(projectId, { name: normalizedName })
+      toast.success("Project renamed")
+    } catch (nextError) {
+      toast.error(nextError instanceof Error ? nextError.message : "Failed to rename project.")
+    }
+  }
+
+  const handleDeleteProject = async (projectId: string, projectName: string) => {
+    const shouldDelete = window.confirm(`Delete "${projectName}"? This action cannot be undone.`)
+    if (!shouldDelete) return
+
+    try {
+      await deleteProject(projectId)
+      toast.success("Project deleted")
+    } catch (nextError) {
+      toast.error(nextError instanceof Error ? nextError.message : "Failed to delete project.")
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col bg-background mx-2 my-2 border border-border rounded-lg min-w-0">
       <ProjectHeader
@@ -124,9 +210,50 @@ export function ProjectsContent() {
         onViewOptionsChange={setViewOptions}
         onAddProject={openWizard}
       />
-      {viewOptions.viewType === "timeline" && <ProjectTimeline />}
-      {viewOptions.viewType === "list" && <ProjectCardsView projects={filteredProjects} onCreateProject={openWizard} />}
-      {viewOptions.viewType === "board" && <ProjectBoardView projects={filteredProjects} onAddProject={openWizard} />}
+      {error && (
+        <div className="mx-4 mt-3 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <span>{error}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            className="h-7"
+            onClick={() => void refetch()}
+            disabled={isLoading || isMutating}
+          >
+            Retry
+          </Button>
+        </div>
+      )}
+      {viewOptions.viewType === "timeline" && (
+        <ProjectTimeline
+          projects={filteredProjects}
+          loading={isLoading}
+          onTaskStatusChange={handleTaskStatusChange}
+          onTaskDatesChange={handleTaskDatesChange}
+          onProjectDatesChange={handleProjectDatesChange}
+        />
+      )}
+      {viewOptions.viewType === "list" && (
+        <ProjectCardsView
+          projects={filteredProjects}
+          loading={isLoading}
+          onCreateProject={openWizard}
+          onProjectStatusChange={handleProjectStatusChange}
+          onRenameProject={handleRenameProject}
+          onDeleteProject={handleDeleteProject}
+        />
+      )}
+      {viewOptions.viewType === "board" && (
+        <ProjectBoardView
+          projects={filteredProjects}
+          loading={isLoading}
+          onAddProject={openWizard}
+          onProjectStatusChange={handleProjectStatusChange}
+          onRenameProject={handleRenameProject}
+          onDeleteProject={handleDeleteProject}
+        />
+      )}
       {isWizardOpen && (
         <ProjectWizard onClose={closeWizard} onCreate={handleProjectCreated} />
       )}

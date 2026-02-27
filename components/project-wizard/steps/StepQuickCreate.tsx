@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar } from "../../ui/calendar";
@@ -17,9 +16,10 @@ import {
   CommandItem,
   CommandList,
 } from "../../ui/command";
-import { Check, X, CornersOut, Star, CalendarBlank, UserCircle, Spinner, List, Paperclip, Microphone, Rows, ChartBar, Tag } from "@phosphor-icons/react/dist/ssr";
+import { Check, X, CalendarBlank, UserCircle, Spinner, List, Paperclip, Microphone, Rows, ChartBar, Tag } from "@phosphor-icons/react/dist/ssr";
 import { ProjectDescriptionEditor } from "../ProjectDescriptionEditor";
 import { clients, type Client } from "@/lib/data/clients";
+import type { CreateProjectInput } from "@/hooks/use-projects-crud";
 
 // --- Mock Data ---
 
@@ -176,7 +176,7 @@ export function DatePicker({
 
 interface StepQuickCreateProps {
   onClose: () => void;
-  onCreate: () => void;
+  onCreate: (input: CreateProjectInput) => Promise<void> | void;
   onExpandChange?: (isExpanded: boolean) => void;
 }
 
@@ -224,8 +224,67 @@ export function StepQuickCreate({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-      onCreate();
+      void handleCreate();
     }
+  };
+
+  const mapStatusToProjectStatus = (
+    statusId: string,
+  ): CreateProjectInput["status"] => {
+    switch (statusId) {
+      case "todo":
+        return "planned";
+      case "in-progress":
+        return "active";
+      case "done":
+        return "completed";
+      case "canceled":
+        return "cancelled";
+      case "backlog":
+      default:
+        return "backlog";
+    }
+  };
+
+  const mapPriorityToProjectPriority = (
+    priorityId?: string,
+  ): CreateProjectInput["priority"] => {
+    switch (priorityId) {
+      case "urgent":
+        return "urgent";
+      case "high":
+        return "high";
+      case "medium":
+        return "medium";
+      case "low":
+        return "low";
+      default:
+        return "medium";
+    }
+  };
+
+  const handleCreate = async () => {
+    const normalizedTitle = title.trim();
+    if (!normalizedTitle) return;
+
+    const start = startDate ?? new Date();
+    const end = targetDate
+      ? targetDate
+      : new Date(start.getFullYear(), start.getMonth(), start.getDate() + 14);
+
+    const payload: CreateProjectInput = {
+      name: normalizedTitle,
+      status: mapStatusToProjectStatus(status.id),
+      priority: mapPriorityToProjectPriority(priority?.id),
+      startDate: start,
+      endDate: end,
+      client: client?.name,
+      typeLabel: sprintType?.label,
+      tags: selectedTag ? [selectedTag.label.toLowerCase()] : [],
+      members: assignee ? [assignee.name] : [],
+    };
+
+    await onCreate(payload);
   };
 
   return (
@@ -546,7 +605,8 @@ export function StepQuickCreate({
           </div>
 
           <button
-            onClick={onCreate}
+            onClick={() => void handleCreate()}
+            disabled={!title.trim()}
             className="bg-primary hover:bg-primary/90 flex gap-3 h-10 items-center justify-center px-4 py-2 rounded-lg transition-colors cursor-pointer"
           >
             <span className="font-medium text-primary-foreground text-sm leading-5">

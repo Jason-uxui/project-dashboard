@@ -39,6 +39,40 @@ The dashboard is deployed on Vercel:
 
 > Note: This is a UI‑first demo. It uses mocked data and does not include authentication or a backend API.
 
+## Real Data + CRUD (Supabase)
+
+The dashboard now includes real CRUD wiring for projects on the main dashboard page (`/`).
+
+### 1) Configure environment variables
+
+Create `.env.local` from `.env.example`:
+
+```bash
+cp .env.example .env.local
+```
+
+Set:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+### 2) Run the SQL migration
+
+Run the SQL in:
+
+- `supabase/projects_crud.sql`
+
+This creates `projects` and `tasks` tables, indexes, update triggers, and permissive RLS policies
+for `anon` + `authenticated`.
+
+### 3) Start app
+
+```bash
+bun dev
+```
+
+You can now create, read, update, and delete projects from the dashboard.
+
 ## Features
 
 - **Project overview layout**
@@ -97,19 +131,18 @@ This separation keeps:
 
 ### Prerequisites
 
-- Node.js 18+
-- pnpm (recommended) or npm/yarn
+- Bun 1.3+
 
 ### Install dependencies
 
 \`\`\`bash
-pnpm install
+bun install
 \`\`\`
 
 ### Run the development server
 
 \`\`\`bash
-pnpm dev
+bun dev
 \`\`\`
 
 The app will be available at `http://localhost:3000`.
@@ -117,8 +150,8 @@ The app will be available at `http://localhost:3000`.
 ### Build for production
 
 \`\`\`bash
-pnpm build
-pnpm start
+bun run build
+bun run start
 \`\`\`
 
 ## Reuse & Customization

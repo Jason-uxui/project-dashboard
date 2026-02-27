@@ -33,9 +33,44 @@ const FIXED_TODAY = new Date(2024, 0, 23) // 23 Jan 2024
 
 // projects imported from lib/data
 
-export function ProjectTimeline() {
-  const [projects, setProjects] = useState(initialProjects)
-  const [expandedProjects, setExpandedProjects] = useState<string[]>(initialProjects.map((p) => p.id))
+type ProjectTimelineProps = {
+  projects?: Project[]
+  loading?: boolean
+  onTaskStatusChange?: (
+    projectId: string,
+    taskId: string,
+    status: Project["tasks"][number]["status"]
+  ) => Promise<void> | void
+  onTaskDatesChange?: (
+    projectId: string,
+    taskId: string,
+    startDate: Date,
+    endDate: Date
+  ) => Promise<void> | void
+  onProjectDatesChange?: (
+    projectId: string,
+    startDate: Date,
+    endDate: Date
+  ) => Promise<void> | void
+}
+
+function calculateTaskProgress(tasks: Project["tasks"]): number {
+  if (tasks.length === 0) return 0
+  const doneCount = tasks.filter((task) => task.status === "done").length
+  return Math.round((doneCount / tasks.length) * 100)
+}
+
+export function ProjectTimeline({
+  projects: projectsProp,
+  loading = false,
+  onTaskStatusChange,
+  onTaskDatesChange,
+  onProjectDatesChange,
+}: ProjectTimelineProps) {
+  const [projects, setProjects] = useState<Project[]>(projectsProp ?? initialProjects)
+  const [expandedProjects, setExpandedProjects] = useState<string[]>(
+    (projectsProp ?? initialProjects).map((p) => p.id)
+  )
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [viewMode, setViewMode] = useState<"Day" | "Week" | "Month" | "Quarter">("Week")
   const [zoom, setZoom] = useState(1)
@@ -70,6 +105,12 @@ export function ProjectTimeline() {
   })
 
   const viewModes = useMemo(() => ["Day", "Week", "Month", "Quarter"] as const, [])
+
+  useEffect(() => {
+    if (!projectsProp) return
+    setProjects(projectsProp)
+    setExpandedProjects(projectsProp.map((project) => project.id))
+  }, [projectsProp])
 
   const toggleProject = (projectId: string) => {
     setExpandedProjects((prev) =>
@@ -143,59 +184,94 @@ export function ProjectTimeline() {
     shouldAutoScrollToTodayRef.current = false
   }, [todayOffsetDays, cellWidth, isSidebarOpen, nameColWidth])
 
+  const persistTaskDates = (projectId: string, taskId: string, startDate: Date, endDate: Date) => {
+    void onTaskDatesChange?.(projectId, taskId, startDate, endDate)
+  }
+
+  const persistProjectDates = (projectId: string, startDate: Date, endDate: Date) => {
+    void onProjectDatesChange?.(projectId, startDate, endDate)
+  }
+
   const toggleTaskStatus = (projectId: string, taskId: string) => {
+    let nextStatus: Project["tasks"][number]["status"] = "todo"
+
     setProjects((prev) =>
       prev.map((p) => {
         if (p.id !== projectId) return p
+
+        const nextTasks = p.tasks.map((t) => {
+          if (t.id !== taskId) return t
+          nextStatus = t.status === "done" ? "todo" : "done"
+          return { ...t, status: nextStatus }
+        })
+
         return {
           ...p,
-          tasks: p.tasks.map((t) => {
-            if (t.id !== taskId) return t
-            return { ...t, status: t.status === "done" ? "todo" : "done" }
-          }),
+          tasks: nextTasks,
+          progress: calculateTaskProgress(nextTasks),
         }
       }),
     )
+
+    void onTaskStatusChange?.(projectId, taskId, nextStatus)
   }
 
   const handleUpdateTask = (projectId: string, taskId: string, newStart: Date) => {
-    setProjects((prev) =>
-      prev.map((p) => {
-        if (p.id !== projectId) return p
+    const targetProject = projects.find((project) => project.id === projectId)
+    const targetTask = targetProject?.tasks.find((task) => task.id === taskId)
+    if (!targetProject || !targetTask) return
 
-        const task = p.tasks.find((t) => t.id === taskId)
-        if (!task) return p
+    const taskDuration = differenceInCalendarDays(targetTask.endDate, targetTask.startDate) + 1
+    const newEnd = addDays(newStart, taskDuration - 1)
 
-        const taskDuration = differenceInCalendarDays(task.endDate, task.startDate) + 1
-        const newEnd = addDays(newStart, taskDuration - 1)
+    const needsExpand = newStart < targetProject.startDate || newEnd > targetProject.endDate
+    if (needsExpand) {
+      showConfirmDialog(
+        "This task is outside the project range. Expand project to fit?",
+        () => {
+          const nextProjectStart =
+            newStart < targetProject.startDate ? newStart : targetProject.startDate
+          const nextProjectEnd =
+            newEnd > targetProject.endDate ? newEnd : targetProject.endDate
 
-        const needsExpand = newStart < p.startDate || newEnd > p.endDate
-        if (needsExpand) {
-          showConfirmDialog(
-            "This task is outside the project range. Expand project to fit?",
-            () => {
-              setProjects((prev) =>
-                prev.map((proj) => {
-                  if (proj.id !== p.id) return proj
-                  return {
-                    ...proj,
-                    startDate: newStart < proj.startDate ? newStart : proj.startDate,
-                    endDate: newEnd > proj.endDate ? newEnd : proj.endDate,
-                    tasks: proj.tasks.map((t) => (t.id === taskId ? { ...t, startDate: newStart, endDate: newEnd } : t)),
-                  }
-                })
+          setProjects((prev) =>
+            prev.map((project) => {
+              if (project.id !== projectId) return project
+              const nextTasks = project.tasks.map((task) =>
+                task.id === taskId ? { ...task, startDate: newStart, endDate: newEnd } : task
               )
-            }
+              return {
+                ...project,
+                startDate: nextProjectStart,
+                endDate: nextProjectEnd,
+                tasks: nextTasks,
+                progress: calculateTaskProgress(nextTasks),
+              }
+            })
           )
-          return p
-        }
 
-        return {
-          ...p,
-          tasks: p.tasks.map((t) => (t.id === taskId ? { ...t, startDate: newStart, endDate: newEnd } : t)),
+          persistTaskDates(projectId, taskId, newStart, newEnd)
+          persistProjectDates(projectId, nextProjectStart, nextProjectEnd)
         }
-      }),
+      )
+      return
+    }
+
+    setProjects((prev) =>
+      prev.map((project) => {
+        if (project.id !== projectId) return project
+        const nextTasks = project.tasks.map((task) =>
+          task.id === taskId ? { ...task, startDate: newStart, endDate: newEnd } : task
+        )
+        return {
+          ...project,
+          tasks: nextTasks,
+          progress: calculateTaskProgress(nextTasks),
+        }
+      })
     )
+
+    persistTaskDates(projectId, taskId, newStart, newEnd)
   }
 
   const handleUpdateProjectDuration = (projectId: string, newStart: Date, newEnd: Date) => {
@@ -210,18 +286,24 @@ export function ProjectTimeline() {
         }
       }),
     )
+    persistProjectDates(projectId, newStart, newEnd)
   }
 
   const handleUpdateTaskDuration = (projectId: string, taskId: string, newStart: Date, newEnd: Date) => {
     setProjects((prev) =>
       prev.map((p) => {
         if (p.id !== projectId) return p
+        const nextTasks = p.tasks.map((t) =>
+          t.id === taskId ? { ...t, startDate: newStart, endDate: newEnd } : t
+        )
         return {
           ...p,
-          tasks: p.tasks.map((t) => (t.id === taskId ? { ...t, startDate: newStart, endDate: newEnd } : t)),
+          tasks: nextTasks,
+          progress: calculateTaskProgress(nextTasks),
         }
       }),
     )
+    persistTaskDates(projectId, taskId, newStart, newEnd)
   }
 
   const showConfirmDialog = (message: string, onConfirm: () => void, onCancel: () => void = () => { }) => {
@@ -248,40 +330,60 @@ export function ProjectTimeline() {
   }
 
   const handleUpdateProject = (projectId: string, newStart: Date, confirmed: boolean = false) => {
-    setProjects((prev) =>
-      prev.map((p) => {
-        if (p.id !== projectId) return p
+    const targetProject = projects.find((project) => project.id === projectId)
+    if (!targetProject) return
 
-        const durationDays = differenceInCalendarDays(p.endDate, p.startDate) + 1
-        const newEnd = addDays(newStart, durationDays - 1)
-        const diff = differenceInCalendarDays(newStart, p.startDate)
+    const durationDays = differenceInCalendarDays(targetProject.endDate, targetProject.startDate) + 1
+    const newEnd = addDays(newStart, durationDays - 1)
+    const diff = differenceInCalendarDays(newStart, targetProject.startDate)
+    const shouldMoveChildren = targetProject.tasks.length > 0
 
-        const shouldMoveChildren = p.tasks.length > 0
-        if (shouldMoveChildren && !confirmed) {
-          showConfirmDialog(
-            `Move all ${p.tasks.length} tasks along with the project?`,
-            () => {
-              // Re-run the update with confirmation
-              handleUpdateProject(projectId, newStart, true)
-            }
-          )
-          return p // Don't update yet, wait for confirmation
+    if (shouldMoveChildren && !confirmed) {
+      showConfirmDialog(
+        `Move all ${targetProject.tasks.length} tasks along with the project?`,
+        () => {
+          handleUpdateProject(projectId, newStart, true)
         }
+      )
+      return
+    }
 
+    const shiftedTasks = shouldMoveChildren
+      ? targetProject.tasks.map((task) => ({
+          id: task.id,
+          startDate: addDays(task.startDate, diff),
+          endDate: addDays(task.endDate, diff),
+        }))
+      : []
+
+    setProjects((prev) =>
+      prev.map((project) => {
+        if (project.id !== projectId) return project
+        const nextTasks = shouldMoveChildren
+          ? project.tasks.map((task) => {
+              const shiftedTask = shiftedTasks.find((item) => item.id === task.id)
+              if (!shiftedTask) return task
+              return {
+                ...task,
+                startDate: shiftedTask.startDate,
+                endDate: shiftedTask.endDate,
+              }
+            })
+          : project.tasks
         return {
-          ...p,
+          ...project,
           startDate: newStart,
           endDate: newEnd,
-          tasks: shouldMoveChildren
-            ? p.tasks.map((t) => ({
-              ...t,
-              startDate: addDays(t.startDate, diff),
-              endDate: addDays(t.endDate, diff),
-            }))
-            : p.tasks,
+          tasks: nextTasks,
+          progress: calculateTaskProgress(nextTasks),
         }
-      }),
+      })
     )
+
+    persistProjectDates(projectId, newStart, newEnd)
+    shiftedTasks.forEach((task) => {
+      persistTaskDates(projectId, task.id, task.startDate, task.endDate)
+    })
   }
 
   const handleSaveEdit = () => {
@@ -291,9 +393,9 @@ export function ProjectTimeline() {
     const newEnd = new Date(editEndDate)
 
     if (editDialog.type === "project") {
-      handleUpdateProject(editDialog.projectId, newStart)
+      handleUpdateProjectDuration(editDialog.projectId, newStart, newEnd)
     } else if (editDialog.type === "task" && editDialog.taskId) {
-      handleUpdateTask(editDialog.projectId, editDialog.taskId, newStart)
+      handleUpdateTaskDuration(editDialog.projectId, editDialog.taskId, newStart, newEnd)
     }
 
     setEditDialog({ isOpen: false, type: null, projectId: null, taskId: null })
@@ -314,6 +416,14 @@ export function ProjectTimeline() {
     })
     setEditStartDate(item.startDate.toISOString().split('T')[0])
     setEditEndDate(item.endDate.toISOString().split('T')[0])
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-6 text-sm text-muted-foreground">
+        Loading projects...
+      </div>
+    )
   }
 
   return (

@@ -211,6 +211,7 @@ export function AppSidebar() {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
+              id="sidebar-user-menu-trigger"
               className="mt-2 flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-accent cursor-pointer"
             >
               <Avatar className="h-8 w-8">

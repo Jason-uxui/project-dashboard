@@ -15,18 +15,20 @@ import { StepReview } from "./steps/StepReview";
 import { StepQuickCreate } from "./steps/StepQuickCreate";
 import { CaretLeft, CaretRight, X } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/lib/utils";
+import type { CreateProjectInput } from "@/hooks/use-projects-crud";
 
 const QUICK_CREATE_STEP = 100;
 
 interface ProjectWizardProps {
   onClose: () => void;
-  onCreate?: () => void;
+  onCreate?: (input: CreateProjectInput) => Promise<void> | void;
 }
 
 export function ProjectWizard({ onClose, onCreate }: ProjectWizardProps) {
   const [step, setStep] = useState(0);
   const [maxStepReached, setMaxStepReached] = useState(0);
   const [isQuickCreateExpanded, setIsQuickCreateExpanded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [data, setData] = useState<ProjectData>({
     mode: undefined,
     successType: 'undefined',
@@ -89,6 +91,50 @@ export function ProjectWizard({ onClose, onCreate }: ProjectWizardProps) {
     onClose();
   };
 
+  const ownerNameMap: Record<string, string> = {
+    "jason-d": "Jason D",
+    "alex-morgan": "Alex Morgan",
+    "sarah-chen": "Sarah Chen",
+    "mike-ross": "Mike Ross",
+    "harrold": "Harrold",
+    "james": "James Boarnd",
+    "mitch": "Mitch Sato",
+  };
+
+  const guidedProjectName = (() => {
+    const intentToName: Record<string, string> = {
+      delivery: "Delivery project",
+      experiment: "Experiment project",
+      internal: "Internal project",
+    };
+    return intentToName[data.intent ?? ""] ?? "New project";
+  })();
+
+  const guidedProjectInput: CreateProjectInput = {
+    name: guidedProjectName,
+    status: "planned",
+    priority: "medium",
+    endDate: data.deadlineDate ? new Date(data.deadlineDate) : undefined,
+    tags: data.intent ? [data.intent] : [],
+    members: data.ownerId ? [ownerNameMap[data.ownerId] ?? "Owner"] : [],
+  };
+
+  const submitProject = async (input: CreateProjectInput) => {
+    if (!onCreate || isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      await onCreate(input);
+      onClose();
+    } catch (nextError) {
+      const message =
+        nextError instanceof Error ? nextError.message : "Failed to create project.";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Define steps for the stepper (excluding Mode selection)
   const steps = [
     "Project intent",
@@ -133,11 +179,7 @@ export function ProjectWizard({ onClose, onCreate }: ProjectWizardProps) {
         ) : step === QUICK_CREATE_STEP ? (
             <StepQuickCreate 
                 onClose={handleClose} 
-                onCreate={() => {
-                  onCreate?.();
-                  toast.success("Project created successfully");
-                  onClose();
-                }} 
+                onCreate={submitProject}
                 onExpandChange={setIsQuickCreateExpanded}
             />
         ) : (
@@ -221,10 +263,9 @@ export function ProjectWizard({ onClose, onCreate }: ProjectWizardProps) {
                                     <Button variant="outline">Save as template</Button>
                                     <Button
                                       onClick={() => {
-                                        onCreate?.();
-                                        toast.success("Project created successfully");
-                                        onClose();
+                                        void submitProject(guidedProjectInput);
                                       }}
+                                      disabled={isSubmitting}
                                     >
                                       Create project
                                     </Button>
