@@ -267,8 +267,8 @@ export function MyTasksPage() {
           <div className="flex items-center gap-2">
             <ViewOptionsPopover options={viewOptions} onChange={setViewOptions} allowedViewTypes={["list", "board"]} />
             <div className="relative">
-              <div className="relative rounded-xl border border-border bg-card/80 shadow-sm overflow-hidden">
-                <Button className="h-8 gap-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 relative z-10 px-3">
+              <div className="relative">
+                <Button className="h-8 gap-2 shadow-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 relative z-10 px-3">
                   <Sparkle className="h-4 w-4" weight="fill" />
                   Ask AI
                 </Button>

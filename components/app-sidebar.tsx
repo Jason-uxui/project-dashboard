@@ -49,11 +49,13 @@ import {
   Lightning,
   Gear,
   Question,
+  SignOut,
   CaretRight,
   CaretUpDown,
 } from "@phosphor-icons/react/dist/ssr"
 import { footerItems, navGroups, type NavItemId, type SidebarFooterItemId } from "@/lib/data/sidebar"
 import { SettingsDialog } from "@/components/settings/SettingsDialog"
+import { AuthDialog, type AuthMode } from "@/components/auth/AuthDialog"
 
 const navItemIcons: Record<NavItemId, React.ComponentType<{ className?: string }>> = {
   dashboard: Gauge,
@@ -123,13 +125,35 @@ const navItemRoutes: Record<NavItemId, string> = {
 export function AppSidebar() {
   const pathname = usePathname()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isAuthOpen, setIsAuthOpen] = useState(false)
+  const [authMode, setAuthMode] = useState<AuthMode>("sign-in")
+
+  const openAuth = (mode: AuthMode) => {
+    setAuthMode(mode)
+    setIsAuthOpen(true)
+  }
+
+  const getHrefForNavItem = (id: NavItemId): string => {
+    if (id === "my-tasks") return "/tasks"
+    if (id === "projects") return "/"
+    if (id === "inbox") return "/inbox"
+    if (id === "clients") return "/clients"
+    if (id === "performance") return "/performance"
+    return "#"
+  }
 
   const isItemActive = (id: NavItemId): boolean => {
     const route = navItemRoutes[id]
     if (id === "dashboard") {
       return pathname === "/" || pathname === "/dashboard"
     }
-    return pathname.startsWith(route)
+    if (id === "clients") {
+      return pathname.startsWith("/clients")
+    }
+    if (id === "performance") {
+      return pathname.startsWith("/performance")
+    }
+    return false
   }
 
   return (
@@ -238,9 +262,42 @@ export function AppSidebar() {
           </div>
           <CaretRight className="h-4 w-4 text-muted-foreground" />
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="mt-2 flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-accent cursor-pointer"
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarImage src="/avatar-profile.jpg" />
+                <AvatarFallback>JD</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-1 flex-col">
+                <span className="text-sm font-medium">Jason D</span>
+                <span className="text-xs text-muted-foreground">jason.duong@mail.com</span>
+              </div>
+              <CaretRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="end" className="w-40">
+            <DropdownMenuItem
+              className="cursor-pointer text-destructive focus:text-destructive"
+              onSelect={() => openAuth("sign-in")}
+            >
+              <SignOut className="h-4 w-4" />
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
 
       <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+      <AuthDialog
+        open={isAuthOpen}
+        onOpenChange={setIsAuthOpen}
+        mode={authMode}
+        onModeChange={setAuthMode}
+      />
     </Sidebar>
   )
 }

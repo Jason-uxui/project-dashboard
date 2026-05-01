@@ -16,6 +16,7 @@ export type Project = {
   tasks: Array<{
     id: string
     name: string
+    type: "bug" | "improvement" | "task"
     assignee: string
     status: "todo" | "in-progress" | "done"
     startDate: Date
@@ -48,6 +49,7 @@ export const projects: Project[] = [
       {
         id: "1-1",
         name: "Discovery & IA",
+        type: "task",
         assignee: "JD",
         status: "done",
         startDate: _d(3),
@@ -56,6 +58,7 @@ export const projects: Project[] = [
       {
         id: "1-2",
         name: "Wireframe layout",
+        type: "task",
         assignee: "JD",
         status: "in-progress",
         startDate: _d(7),
@@ -64,6 +67,7 @@ export const projects: Project[] = [
       {
         id: "1-3",
         name: "UI kit & visual design",
+        type: "task",
         assignee: "HP",
         status: "todo",
         startDate: _d(13),
@@ -72,6 +76,7 @@ export const projects: Project[] = [
       {
         id: "1-4",
         name: "Prototype & handoff",
+        type: "task",
         assignee: "HP",
         status: "todo",
         startDate: _d(20),
@@ -97,6 +102,7 @@ export const projects: Project[] = [
       {
         id: "2-1",
         name: "Define MVP scope",
+        type: "task",
         assignee: "PM",
         status: "done",
         startDate: _d(3),
@@ -105,6 +111,7 @@ export const projects: Project[] = [
       {
         id: "2-2",
         name: "Database schema",
+        type: "task",
         assignee: "BE",
         status: "in-progress",
         startDate: _d(6),
@@ -113,6 +120,7 @@ export const projects: Project[] = [
       {
         id: "2-3",
         name: "API endpoints",
+        type: "task",
         assignee: "BE",
         status: "todo",
         startDate: _d(11),
@@ -121,6 +129,7 @@ export const projects: Project[] = [
       {
         id: "2-4",
         name: "Roles & permissions",
+        type: "task",
         assignee: "BE",
         status: "todo",
         startDate: _d(16),
@@ -129,6 +138,7 @@ export const projects: Project[] = [
       {
         id: "2-5",
         name: "UI implementation",
+        type: "task",
         assignee: "FE",
         status: "todo",
         startDate: _d(19),
@@ -137,6 +147,7 @@ export const projects: Project[] = [
       {
         id: "2-6",
         name: "QA & rollout",
+        type: "task",
         assignee: "QA",
         status: "todo",
         startDate: _d(22),
@@ -162,6 +173,7 @@ export const projects: Project[] = [
       {
         id: "3-1",
         name: "Course outline",
+        type: "task",
         assignee: "JD",
         status: "done",
         startDate: _d(14),
@@ -170,6 +182,7 @@ export const projects: Project[] = [
       {
         id: "3-2",
         name: "Lesson player UI",
+        type: "task",
         assignee: "HP",
         status: "in-progress",
         startDate: _d(17),
@@ -178,6 +191,7 @@ export const projects: Project[] = [
       {
         id: "3-3",
         name: "Payment integration",
+        type: "task",
         assignee: "BE",
         status: "todo",
         startDate: _d(24),
@@ -203,6 +217,7 @@ export const projects: Project[] = [
       {
         id: "4-1",
         name: "Requirements gathering",
+        type: "task",
         assignee: "PM",
         status: "todo",
         startDate: _d(18),
@@ -211,6 +226,7 @@ export const projects: Project[] = [
       {
         id: "4-2",
         name: "Data model",
+        type: "task",
         assignee: "BE",
         status: "todo",
         startDate: _d(22),
@@ -219,6 +235,7 @@ export const projects: Project[] = [
       {
         id: "4-3",
         name: "Core screens",
+        type: "task",
         assignee: "FE",
         status: "todo",
         startDate: _d(26),
@@ -227,6 +244,7 @@ export const projects: Project[] = [
       {
         id: "4-4",
         name: "QA & UAT",
+        type: "task",
         assignee: "QA",
         status: "todo",
         startDate: _d(32),
@@ -252,6 +270,7 @@ export const projects: Project[] = [
       {
         id: "5-1",
         name: "IA & sitemap",
+        type: "task",
         assignee: "JD",
         status: "done",
         startDate: _d(-7),
@@ -260,6 +279,7 @@ export const projects: Project[] = [
       {
         id: "5-2",
         name: "Product listing UI",
+        type: "task",
         assignee: "HP",
         status: "done",
         startDate: _d(-5),
@@ -268,6 +288,7 @@ export const projects: Project[] = [
       {
         id: "5-3",
         name: "Cart & checkout flow",
+        type: "task",
         assignee: "HP",
         status: "done",
         startDate: _d(-3),
@@ -276,6 +297,7 @@ export const projects: Project[] = [
       {
         id: "5-4",
         name: "Payment gateway",
+        type: "task",
         assignee: "BE",
         status: "done",
         startDate: _d(-1),
@@ -284,6 +306,7 @@ export const projects: Project[] = [
       {
         id: "5-5",
         name: "Launch checklist",
+        type: "task",
         assignee: "QA",
         status: "done",
         startDate: _d(-2),
@@ -309,6 +332,7 @@ export const projects: Project[] = [
       {
         id: "6-1",
         name: "Landing page layout",
+        type: "task",
         assignee: "JD",
         status: "todo",
         startDate: _d(5),
@@ -317,6 +341,7 @@ export const projects: Project[] = [
       {
         id: "6-2",
         name: "Hero illustrations",
+        type: "task",
         assignee: "HP",
         status: "todo",
         startDate: _d(10),
@@ -325,6 +350,7 @@ export const projects: Project[] = [
       {
         id: "6-3",
         name: "Content QA",
+        type: "task",
         assignee: "QA",
         status: "todo",
         startDate: _d(15),
@@ -350,6 +376,7 @@ export const projects: Project[] = [
       {
         id: "7-1",
         name: "Token audit",
+        type: "task",
         assignee: "JD",
         status: "todo",
         startDate: _d(8),
@@ -358,6 +385,7 @@ export const projects: Project[] = [
       {
         id: "7-2",
         name: "Component inventory",
+        type: "task",
         assignee: "JD",
         status: "todo",
         startDate: _d(11),
@@ -366,6 +394,7 @@ export const projects: Project[] = [
       {
         id: "7-3",
         name: "Deprecation plan",
+        type: "task",
         assignee: "PM",
         status: "todo",
         startDate: _d(14),
@@ -374,6 +403,7 @@ export const projects: Project[] = [
       {
         id: "7-4",
         name: "Docs update",
+        type: "task",
         assignee: "JD",
         status: "todo",
         startDate: _d(18),
@@ -399,6 +429,7 @@ export const projects: Project[] = [
       {
         id: "8-1",
         name: "Hypothesis setup",
+        type: "task",
         assignee: "PM",
         status: "done",
         startDate: _d(-10),
@@ -407,6 +438,7 @@ export const projects: Project[] = [
       {
         id: "8-2",
         name: "Variant design",
+        type: "task",
         assignee: "JD",
         status: "done",
         startDate: _d(-8),
@@ -415,6 +447,7 @@ export const projects: Project[] = [
       {
         id: "8-3",
         name: "Analysis & rollout",
+        type: "task",
         assignee: "Data",
         status: "done",
         startDate: _d(-5),
@@ -440,6 +473,7 @@ export const projects: Project[] = [
       {
         id: "9-1",
         name: "Data audit",
+        type: "task",
         assignee: "Data",
         status: "done",
         startDate: _d(6),
@@ -448,6 +482,7 @@ export const projects: Project[] = [
       {
         id: "9-2",
         name: "Chart library spike",
+        type: "task",
         assignee: "FE",
         status: "in-progress",
         startDate: _d(9),
@@ -456,6 +491,7 @@ export const projects: Project[] = [
       {
         id: "9-3",
         name: "Dashboard layout",
+        type: "task",
         assignee: "JD",
         status: "todo",
         startDate: _d(14),
@@ -464,6 +500,7 @@ export const projects: Project[] = [
       {
         id: "9-4",
         name: "Stakeholder review",
+        type: "task",
         assignee: "PM",
         status: "todo",
         startDate: _d(19),
@@ -472,6 +509,7 @@ export const projects: Project[] = [
       {
         id: "9-5",
         name: "QA & rollout",
+        type: "task",
         assignee: "QA",
         status: "todo",
         startDate: _d(22),
@@ -497,6 +535,7 @@ export const projects: Project[] = [
       {
         id: "10-1",
         name: "Workflow mapping",
+        type: "task",
         assignee: "PM",
         status: "todo",
         startDate: _d(12),
@@ -505,6 +544,7 @@ export const projects: Project[] = [
       {
         id: "10-2",
         name: "Automation scripts",
+        type: "task",
         assignee: "BE",
         status: "todo",
         startDate: _d(16),
@@ -513,6 +553,7 @@ export const projects: Project[] = [
       {
         id: "10-3",
         name: "UX polish",
+        type: "task",
         assignee: "JD",
         status: "todo",
         startDate: _d(23),
@@ -521,6 +562,7 @@ export const projects: Project[] = [
       {
         id: "10-4",
         name: "Pilot rollout",
+        type: "task",
         assignee: "Ops",
         status: "todo",
         startDate: _d(29),
@@ -546,6 +588,7 @@ export const projects: Project[] = [
       {
         id: "9-1",
         name: "Content IA",
+        type: "task",
         assignee: "JD",
         status: "done",
         startDate: _d(-15),
@@ -554,6 +597,7 @@ export const projects: Project[] = [
       {
         id: "9-2",
         name: "Search UX",
+        type: "task",
         assignee: "JD",
         status: "done",
         startDate: _d(-13),
@@ -562,6 +606,7 @@ export const projects: Project[] = [
       {
         id: "9-3",
         name: "Article template",
+        type: "task",
         assignee: "HP",
         status: "done",
         startDate: _d(-10),
@@ -570,6 +615,7 @@ export const projects: Project[] = [
       {
         id: "9-4",
         name: "Rollout & feedback",
+        type: "task",
         assignee: "PM",
         status: "done",
         startDate: _d(-7),
@@ -595,6 +641,7 @@ export const projects: Project[] = [
       {
         id: "10-1",
         name: "Error state review",
+        type: "bug",
         assignee: "QA",
         status: "done",
         startDate: _d(-6),
@@ -603,6 +650,7 @@ export const projects: Project[] = [
       {
         id: "10-2",
         name: "Charts clean-up",
+        type: "task",
         assignee: "JD",
         status: "done",
         startDate: _d(-3),
