@@ -25,6 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { FilterPopover } from "@/components/filter-popover"
 import { ChipOverflow } from "@/components/chip-overflow"
 import { TaskRowBase } from "@/components/tasks/TaskRowBase"
+import { TaskQuickCreateModal } from "@/components/tasks/TaskQuickCreateModal"
 import { cn } from "@/lib/utils"
 
 type ProjectTasksTabProps = {
@@ -34,6 +35,7 @@ type ProjectTasksTabProps = {
 export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
   const [tasks, setTasks] = useState<ProjectTask[]>(() => getProjectTasks(project))
   const [filters, setFilters] = useState<FilterChipType[]>([])
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
 
   useEffect(() => {
     setTasks(getProjectTasks(project))
@@ -51,9 +53,9 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
       prev.map((task) =>
         task.id === taskId
           ? {
-              ...task,
-              status: task.status === "done" ? "todo" : "done",
-            }
+            ...task,
+            status: task.status === "done" ? "todo" : "done",
+          }
           : task,
       ),
     )
@@ -105,7 +107,11 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
           >
             View
           </Button>
-          <Button size="sm" className="h-8 rounded-lg px-3 text-xs font-medium">
+          <Button
+            size="sm"
+            className="h-8 rounded-lg px-3 text-xs font-medium"
+            onClick={() => setIsTaskModalOpen(true)}
+          >
             <Plus className="mr-1.5 h-4 w-4" />
             New Task
           </Button>
@@ -125,6 +131,12 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
           </SortableContext>
         </DndContext>
       </div>
+      <TaskQuickCreateModal
+        open={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        context={{ projectId: project.id }}
+        onTaskCreated={(newTask) => setTasks((prev) => [newTask, ...prev])}
+      />
     </section>
   )
 }

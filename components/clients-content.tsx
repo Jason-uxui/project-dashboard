@@ -24,6 +24,7 @@ import { clients, getProjectCountForClient, type ClientStatus } from "@/lib/data
 import { projects } from "@/lib/data/projects"
 import { ClientWizard } from "@/components/clients/ClientWizard"
 import { ClientDetailsDrawer } from "@/components/clients/ClientDetailsDrawer"
+import type { Client } from "@/lib/data/clients"
 
 function statusLabel(status: ClientStatus): string {
   if (status === "prospect") return "Prospect"
@@ -124,6 +125,8 @@ export function ClientsContent() {
   const [pageSize, setPageSize] = useState(10)
   const [page, setPage] = useState(1)
   const [activeClientId, setActiveClientId] = useState<string | null>(null)
+  const [editingClient, setEditingClient] = useState<Client | null>(null)
+  const [isEditWizardOpen, setIsEditWizardOpen] = useState(false)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -463,7 +466,8 @@ export function ClientsContent() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
-                                  toast.info("Edit client opens modal (mock)")
+                                  setEditingClient(client)
+                                  setIsEditWizardOpen(true)
                                 }}
                               >
                                 Edit client
@@ -608,6 +612,16 @@ export function ClientsContent() {
       </div>
       {isWizardOpen && (
         <ClientWizard mode="create" onClose={() => setIsWizardOpen(false)} />
+      )}
+      {isEditWizardOpen && editingClient && (
+        <ClientWizard
+          mode="edit"
+          initialClient={editingClient}
+          onClose={() => {
+            setIsEditWizardOpen(false)
+            setEditingClient(null)
+          }}
+        />
       )}
       <ClientDetailsDrawer clientId={activeClientId} onClose={() => setActiveClientId(null)} />
     </div>

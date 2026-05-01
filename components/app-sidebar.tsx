@@ -19,42 +19,107 @@ import {
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { ProgressCircle } from "@/components/progress-circle"
-import {
   MagnifyingGlass,
+  Gauge,
   Tray,
-  CheckSquare,
-  Folder,
+  CalendarBlank,
+  Funnel,
   Users,
+  Megaphone,
+  Folder,
+  NotePencil,
+  CheckSquare,
+  UserList,
   ChartBar,
-  Gear,
+  Wallet,
+  Receipt,
+  Money,
+  ChartPieSlice,
+  BuildingOffice,
+  Images,
+  Book,
   Layout,
+  LockKey,
+  Globe,
+  FileText,
+  ShieldCheck,
+  Palette,
+  UsersThree,
+  Plugs,
+  Lightning,
+  Gear,
   Question,
   SignOut,
   CaretRight,
   CaretUpDown,
 } from "@phosphor-icons/react/dist/ssr"
-import { activeProjects, footerItems, navItems, type NavItemId, type SidebarFooterItemId } from "@/lib/data/sidebar"
+import { footerItems, navGroups, type NavItemId, type SidebarFooterItemId } from "@/lib/data/sidebar"
 import { SettingsDialog } from "@/components/settings/SettingsDialog"
 import { AuthDialog, type AuthMode } from "@/components/auth/AuthDialog"
 
 const navItemIcons: Record<NavItemId, React.ComponentType<{ className?: string }>> = {
+  dashboard: Gauge,
   inbox: Tray,
-  "my-tasks": CheckSquare,
-  projects: Folder,
+  calendar: CalendarBlank,
+  pipeline: Funnel,
   clients: Users,
+  campaigns: Megaphone,
+  projects: Folder,
+  content: NotePencil,
+  "my-tasks": CheckSquare,
+  talent: UserList,
   performance: ChartBar,
+  payouts: Wallet,
+  invoices: Receipt,
+  expenses: Money,
+  reports: ChartPieSlice,
+  tax: BuildingOffice,
+  "brand-assets": Images,
+  playbook: Book,
+  templates: Layout,
+  credentials: LockKey,
+  domains: Globe,
+  contracts: FileText,
+  policies: ShieldCheck,
+  "settings-brands": Palette,
+  "settings-team": UsersThree,
+  integrations: Plugs,
+  automations: Lightning,
 }
 
 const footerItemIcons: Record<SidebarFooterItemId, React.ComponentType<{ className?: string }>> = {
   settings: Gear,
-  templates: Layout,
   help: Question,
+}
+
+const navItemRoutes: Record<NavItemId, string> = {
+  dashboard: "/dashboard",
+  inbox: "/inbox",
+  calendar: "/calendar",
+  pipeline: "/pipeline",
+  clients: "/clients",
+  campaigns: "/campaigns",
+  projects: "/projects",
+  content: "/content",
+  "my-tasks": "/tasks",
+  talent: "/talent",
+  performance: "/performance",
+  payouts: "/payouts",
+  invoices: "/invoices",
+  expenses: "/expenses",
+  reports: "/reports",
+  tax: "/tax",
+  "brand-assets": "/brand-assets",
+  playbook: "/playbook",
+  templates: "/templates",
+  credentials: "/credentials",
+  domains: "/domains",
+  contracts: "/contracts",
+  policies: "/policies",
+  "settings-brands": "/settings/brands",
+  "settings-team": "/settings/team",
+  integrations: "/settings/integrations",
+  automations: "/settings/automations",
 }
 
 export function AppSidebar() {
@@ -78,14 +143,9 @@ export function AppSidebar() {
   }
 
   const isItemActive = (id: NavItemId): boolean => {
-    if (id === "projects") {
-      return pathname === "/" || pathname.startsWith("/projects")
-    }
-    if (id === "my-tasks") {
-      return pathname.startsWith("/tasks")
-    }
-    if (id === "inbox") {
-      return pathname.startsWith("/inbox")
+    const route = navItemRoutes[id]
+    if (id === "dashboard") {
+      return pathname === "/" || pathname === "/dashboard"
     }
     if (id === "clients") {
       return pathname.startsWith("/clients")
@@ -105,8 +165,8 @@ export function AppSidebar() {
               <img src="/logo-wrapper.png" alt="Logo" className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-semibold">Workspace</span>
-              <span className="text-xs text-muted-foreground">Pro plan</span>
+              <span className="text-sm font-semibold">CaravanOS</span>
+              <span className="text-xs text-muted-foreground">The Hidden Empire</span>
             </div>
           </div>
           <button className="rounded-md p-1 hover:bg-accent">
@@ -129,60 +189,44 @@ export function AppSidebar() {
           </div>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => {
-                const href = getHrefForNavItem(item.id)
-                const active = isItemActive(item.id)
+        {navGroups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel className="px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              {group.label}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => {
+                  const href = navItemRoutes[item.id]
+                  const active = isItemActive(item.id)
 
-                return (
-                  <SidebarMenuItem key={item.label}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={active}
-                      className="h-9 rounded-lg px-3 font-normal text-muted-foreground"
-                    >
-                      <Link href={href}>
-                        {(() => {
-                          const Icon = navItemIcons[item.id]
-                          return Icon ? <Icon className="h-[18px] w-[18px]" /> : null
-                        })()}
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                    {item.badge && (
-                      <SidebarMenuBadge className="bg-muted text-muted-foreground rounded-full px-2">
-                        {item.badge}
-                      </SidebarMenuBadge>
-                    )}
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-xs font-medium text-muted-foreground">
-            Active Projects
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {activeProjects.map((project) => (
-                <SidebarMenuItem key={project.name}>
-                  <SidebarMenuButton className="h-9 rounded-lg px-3 group">
-                    <ProgressCircle progress={project.progress} color={project.color} size={18} />
-                    <span className="flex-1 truncate text-sm">{project.name}</span>
-                    <span className="opacity-0 group-hover:opacity-100 rounded p-0.5 hover:bg-accent">
-                      <span className="text-muted-foreground text-lg">···</span>
-                    </span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                  return (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        className="h-8 rounded-lg px-3 font-normal text-muted-foreground"
+                      >
+                        <Link href={href}>
+                          {(() => {
+                            const Icon = navItemIcons[item.id]
+                            return Icon ? <Icon className="h-[16px] w-[16px]" /> : null
+                          })()}
+                          <span className="text-[13px]">{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                      {item.badge && (
+                        <SidebarMenuBadge className="bg-muted text-muted-foreground rounded-full px-2 text-[10px]">
+                          {item.badge}
+                        </SidebarMenuBadge>
+                      )}
+                    </SidebarMenuItem>
+                  )
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-border/40 p-2">
@@ -207,6 +251,17 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
 
+        <div className="mt-2 flex items-center gap-3 rounded-lg p-2 hover:bg-accent cursor-pointer">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src="/avatar-profile.jpg" />
+            <AvatarFallback>HZ</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-1 flex-col">
+            <span className="text-sm font-medium">Haz</span>
+            <span className="text-xs text-muted-foreground">The Architect</span>
+          </div>
+          <CaretRight className="h-4 w-4 text-muted-foreground" />
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
